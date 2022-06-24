@@ -4,11 +4,11 @@ import time
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 
-w3 = Web3(Web3.HTTPProvider("https://silent-frosty-cherry.bsc.quiknode.pro/04bacb0dd8715e11376567a881a1af1e4a4dcb69/"))
+w3 = Web3(Web3.HTTPProvider(""))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-account1 = '0x33A371cc7a6ca893280956bd25564C789A2557b3'
-private_key = 'd6e9b8ec45c72c018cfbd8dbe2de4ef607adea55b0e43f5c21d6d88254d798bb'
+account1 = ''
+private_key = ''
 nonce = w3.eth.get_transaction_count(account1)
 
 address = '0x18B2A687610328590Bc8F2e5fEdDe3b582A49cdA'
