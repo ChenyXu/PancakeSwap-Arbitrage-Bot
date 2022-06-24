@@ -1,13 +1,14 @@
 import json
+from json.decoder import JSONDecodeError
 import time
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 
-w3 = Web3(Web3.HTTPProvider("your HTTP RPC"))
+w3 = Web3(Web3.HTTPProvider("https://silent-frosty-cherry.bsc.quiknode.pro/04bacb0dd8715e11376567a881a1af1e4a4dcb69/"))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-account1 = 'Your publc key'
-private_key = 'your private key'
+account1 = '0x33A371cc7a6ca893280956bd25564C789A2557b3'
+private_key = 'd6e9b8ec45c72c018cfbd8dbe2de4ef607adea55b0e43f5c21d6d88254d798bb'
 nonce = w3.eth.get_transaction_count(account1)
 
 address = '0x18B2A687610328590Bc8F2e5fEdDe3b582A49cdA'
@@ -50,17 +51,17 @@ def bet():
     current_total = current_round_info[8]
     current_bull = current_round_info[9]
     current_bear = current_round_info[10]
-    EV_bull = current_total / current_bull - 0.03
-    EV_bear = current_total / current_bear - 0.03
+    EV_bull = current_total / current_bull /2 - 1.03
+    EV_bear = current_total / current_bear /2 - 1.03
 
-    if EV_bear >= 2.1:
+    if EV_bear >= 0.1:
         data = betBear()
-        print('EV', EV_bear - 2.03)
+        print('EV', EV_bear )
         print(current_epoch, 'bet bear for 0.5 bnb', data)
 
-    elif EV_bull >= 2.1:
+    elif EV_bull >= 0.1:
         data = betBull()
-        print('EV', EV_bull - 2.03)
+        print('EV', EV_bull)
         print(current_epoch, 'bet bull for 0.5 bnb', data)
 
     else:
@@ -68,18 +69,22 @@ def bet():
 
 
 while True:
-    current_epoch = contract.functions.currentEpoch().call()
-    current_round_info = contract.functions.rounds(current_epoch).call()
-    current_locktimestamp = current_round_info[2]
-    current_timestamp = w3.eth.get_block('latest')['timestamp']
-    time_to_lock = current_locktimestamp - current_timestamp
+    try:
+        current_epoch = contract.functions.currentEpoch().call()
+        current_round_info = contract.functions.rounds(current_epoch).call()
+        current_locktimestamp = current_round_info[2]
+        current_timestamp = w3.eth.get_block('latest')['timestamp']
+        time_to_lock = current_locktimestamp - current_timestamp
 
-    if 12 >= time_to_lock > 3:
-        nonce = w3.eth.get_transaction_count(account1)
-        try:
-            bet()
-            time.sleep(250)
+        if 12 >= time_to_lock > 3:
+            nonce = w3.eth.get_transaction_count(account1)
+            try:
+                bet()
+                time.sleep(250)
 
-        except:
-            print('error')
-            continue
+            except:
+                print('error')
+                continue
+
+    except JSONDecodeError as e:
+        continue
