@@ -7,9 +7,9 @@ from web3.middleware import geth_poa_middleware
 w3 = Web3(Web3.HTTPProvider(""))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-account1 = ''
+account = ''
 private_key = ''
-nonce = w3.eth.get_transaction_count(account1)
+nonce = w3.eth.get_transaction_count(account)
 
 address = '0x18B2A687610328590Bc8F2e5fEdDe3b582A49cdA'
 abi = json.loads(
@@ -17,35 +17,35 @@ abi = json.loads(
 contract = w3.eth.contract(address=address, abi=abi)
 
 
-def betBull():
+def betBull(i):
     transaction = contract.functions.betBull(current_epoch).buildTransaction({
         'chainId': 56,
-        'from': account1,
+        'from': account,
         'gas': 250000,
         'gasPrice': w3.toWei(15, 'gwei'),
         'nonce': nonce,
-        'value': w3.toWei(0.5, 'ether')
+        'value': w3.toWei(i, 'ether')
     })
     signed_tx = w3.eth.account.sign_transaction(transaction, private_key)
     data = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return data
 
 
-def betBear():
+def betBear(i):
     transaction = contract.functions.betBear(current_epoch).buildTransaction({
         'chainId': 56,
-        'from': account1,
+        'from': account,
         'gas': 250000,
         'gasPrice': w3.toWei(15, 'gwei'),
         'nonce': nonce,
-        'value': w3.toWei(0.5, 'ether')
+        'value': w3.toWei(i, 'ether')
     })
     signed_tx = w3.eth.account.sign_transaction(transaction, private_key)
     data = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return data
 
 
-def bet():
+def bet(i):
     current_epoch = contract.functions.currentEpoch().call()
     current_round_info = contract.functions.rounds(current_epoch).call()
     current_total = current_round_info[8]
@@ -54,18 +54,19 @@ def bet():
     EV_bull = current_total / current_bull /2 - 1.03
     EV_bear = current_total / current_bear /2 - 1.03
 
-    if EV_bear >= 0.1:
-        data = betBear()
+    if EV_bear >= 0.5:
+        data = betBear(i)
         print('EV', EV_bear )
-        print(current_epoch, 'bet bear for 0.5 bnb', data)
+        print(current_epoch, 'bet bull for', i, 'bnb', data)
 
-    elif EV_bull >= 0.1:
-        data = betBull()
+    elif EV_bull >= 0.5:
+        data = betBull(i)
         print('EV', EV_bull)
-        print(current_epoch, 'bet bull for 0.5 bnb', data)
+        print(current_epoch, 'bet bull for', i, 'bnb', data)
 
     else:
         print(current_epoch, 'no bet')
+
 
 
 while True:
@@ -76,15 +77,15 @@ while True:
         current_timestamp = w3.eth.get_block('latest')['timestamp']
         time_to_lock = current_locktimestamp - current_timestamp
 
-        if 12 >= time_to_lock > 3:
-            nonce = w3.eth.get_transaction_count(account1)
-            try:
-                bet()
-                time.sleep(250)
+        if 12 > time_to_lock > 3:
+            nonce = w3.eth.get_transaction_count(account)
+            bet(i)
+            time.sleep(250)
 
-            except:
-                print('error')
-                continue
+    except JSONDecodeError:
+        print('JSON error')
+        continue
 
-    except JSONDecodeError as e:
+    except:
+        print('error')
         continue
