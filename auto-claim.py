@@ -43,5 +43,6 @@ while True:
     print('all claimed')
     f = open('balance history', 'a')
     f.write(str(w3.fromWei(w3.eth.get_balance(account), 'ether')))
+    f.write('\n')
     f.close()
     time.sleep(1800)
