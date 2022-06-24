@@ -41,4 +41,4 @@ def claim():
 while True:
     claim()
     print('all claimed')
-    time.sleep(1500)
+    time.sleep(1800)
