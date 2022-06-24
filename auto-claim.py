@@ -6,10 +6,10 @@ from web3.middleware import geth_poa_middleware
 w3 = Web3(Web3.HTTPProvider("Your HTTP RPC"))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-account1 = 'your publio key'
+account = 'your public key'
 private_key = 'your private key'
 
-nonce = w3.eth.get_transaction_count(account1, 'pending')
+nonce = w3.eth.get_transaction_count(account, 'pending')
 
 address = '0x18B2A687610328590Bc8F2e5fEdDe3b582A49cdA'
 abi = json.loads(
@@ -21,15 +21,15 @@ def claim():
     current_epoch = contract.functions.currentEpoch().call()
     claimable = []
     for i in range(10):
-        if contract.functions.claimable(current_epoch-i, account1).call():
+        if contract.functions.claimable(current_epoch-i, account).call():
             claimable.append(current_epoch-i)
 
     print(claimable)
 
     transaction = contract.functions.claim(claimable).buildTransaction({
         'chainId': 56,
-        'from': account1,
-        'gas': 200000,
+        'from': account,
+        'gas': 500000,
         'gasPrice': w3.toWei(5, 'gwei'),
         'nonce': nonce,
     })
@@ -41,4 +41,7 @@ def claim():
 while True:
     claim()
     print('all claimed')
+    f = open('balance history', 'a')
+    f.write(str(w3.fromWei(w3.eth.get_balance(account), 'ether')))
+    f.close()
     time.sleep(1800)
