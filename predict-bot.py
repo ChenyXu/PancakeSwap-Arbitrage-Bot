@@ -60,7 +60,7 @@ def bet(i):
     BNB_price = (BNB_ftx + BNB_binance) / 2
     BNB_chainlink_data = chainlink_contract.functions.latestRoundData().call()
     BNB_chainlink_price = BNB_chainlink_data[1] / 100000000
-    price_diff = BNB_price - BNB_chainlink_data
+    price_diff = BNB_price - BNB_chainlink_price
 
     if BNB_price > BNB_chainlink_price + 0.5:
         betBull(i)
