@@ -77,14 +77,13 @@ while True:
 
         current_epoch = contract.functions.currentEpoch().call()
         current_round_info = contract.functions.rounds(current_epoch).call()
-        current_closetime = current_round_info[2]
-        current_locktime = current_round_info[3]
+        current_locktime = current_round_info[2]
 
         latest_round = chainlink_contract.functions.latestRound().call()
         chainlink_next_update_time = chainlink_contract.functions.getTimestamp(latest_round + 1).call()
 
         current_timestamp = w3.eth.get_block('latest')['timestamp']
-        time_to_lock = current_closetime - current_timestamp
+        time_to_lock = current_locktime - current_timestamp
 
         if 12 > time_to_lock > 3:
             if chainlink_next_update_time > current_locktime:
