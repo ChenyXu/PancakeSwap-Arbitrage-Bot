@@ -80,7 +80,7 @@ while True:
         current_locktime = current_round_info[2]
 
         latest_round = chainlink_contract.functions.latestRound().call()
-        chainlink_next_update_time = chainlink_contract.functions.getTimestamp(latest_round + 1).call()
+        chainlink_next_update_time = chainlink_contract.functions.getTimestamp(latest_round).call() + 21
 
         current_timestamp = w3.eth.get_block('latest')['timestamp']
         time_to_lock = current_locktime - current_timestamp
