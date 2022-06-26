@@ -1,6 +1,6 @@
 # pancakeswap-arb bot
 
-PancakeSwap has a betting game and I notice that the payout of Bull and Bear often differ a lot. Based on my belief in the ramdom walking theory, I think there might be a small arbitrage opportunity. This bot always bets  and claim rewards automatically. 
+PancakeSwap has a betting game and I notice that the payout of Bull and Bear often differ a lot. Apart from that, the chainlink price feed is slower than the cex price update since the former feeds the price every 21 seconds and people trade BNB in cexs non-stop. Therefore, I think there might be a small arbitrage opportunity. This bot bets and claims rewards automatically. 
 
 https://pancakeswap.finance/prediction
 
