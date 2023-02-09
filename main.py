@@ -23,7 +23,7 @@ with open('history.csv', 'a') as file:
         writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
 
 
-# make sure there is price advantage or at least no price disadvantage
+# make sure there is price advantage or at least no major price disadvantage
 def OffChain():
     # get mean price of the BNB price from on and off chain
     cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
@@ -32,9 +32,9 @@ def OffChain():
     onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
 
     price_diff = cex_price - onchain_price
-    if price_diff > 0.01:
+    if price_diff > 0.05:
         return 1
-    elif price_diff < -0.01:
+    elif price_diff < -0.05:
         return -1
     else:
         return 0
