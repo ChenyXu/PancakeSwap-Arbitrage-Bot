@@ -38,14 +38,20 @@ def OffChain():
         return 0
 
 
+# All the onchain query and transaction method
 class OnChain:
 
     def __init__(self):
+        # set betting parameters. betAmount is the amount you want to bet every round.
+        # EV is the threshold to make a bet. A higher EV means that you only make bets with higher expected gain.
+        # Since data query through RPC is slow and unstable, a higher EV give a better buffer against loss.
+        self.betAmount = 0.01
+        self.EV = 0.1
+        # get onchain data
         self.nonce = w3.eth.get_transaction_count(account)
         self.current_epoch = contract.functions.currentEpoch().call()
         self.current_timestamp = w3.eth.get_block('latest')['timestamp']
         self.current_round_info = contract.functions.rounds(self.current_epoch).call()
-        self.betAmount = 0.01
 
     # function to bet bull
     def betBull(self):
@@ -92,7 +98,8 @@ class OnChain:
                 'nonce': self.nonce,
             })
             signed_tx = w3.eth.account.sign_transaction(transaction, private_key)
-            w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            result = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            print('Claimed rewards for rounds:', claimable, result)
 
     # Check if there is an arb opportunity and bet accordingly
     def bet(self):
