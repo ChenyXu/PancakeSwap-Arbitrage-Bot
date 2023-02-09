@@ -22,22 +22,22 @@ with open('history.csv', 'a') as file:
 
 
 # make sure there is price advantage or at least no price disadvantage
-def OffChain():
-    # get mean price of the BNB price from Binance
-    BNB_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] + binance.fetch_order_book('BNB/BUSD')['asks'][0][
-        0]) / 2
-    # get the current price from chainlink
-    BNB_chainlink_data = chainlink_contract.functions.latestRoundData().call()
-    BNB_chainlink_price = BNB_chainlink_data[1] / 100000000
-    # get the price difference
-    price_diff = BNB_price - BNB_chainlink_price
+class OffChain:
+    # get mean price of the BNB price from on and off chain
+    def __init__(self):
+        self.cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
+                          binance.fetch_order_book('BNB/BUSD')['asks'][0][
+                              0]) / 2
+        self.onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
 
-    if price_diff > 0.1:
-        return 1
-    elif price_diff < -0.1:
-        return -1
-    else:
-        return 0
+    def cal(self):
+        price_diff = self.cex_price - self.onchain_price
+        if price_diff > 0.1:
+            return 1
+        elif price_diff < -0.1:
+            return -1
+        else:
+            return 0
 
 
 class OnChain:
@@ -105,14 +105,14 @@ class OnChain:
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= 0.25 and OffChain() == -1:
+        if EV_bear >= 0.25 and OffChain.cal() == -1:
             data = self.betBear(self.betAmount)
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(file)
                 w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
 
-        elif EV_bull >= 0.25 and OffChain() == 1:
+        elif EV_bull >= 0.25 and OffChain().cal == 1:
             data = self.betBull(self.betAmount)
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
