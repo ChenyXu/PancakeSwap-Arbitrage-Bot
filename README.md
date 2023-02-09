@@ -1,4 +1,4 @@
-# pancakeswap-arb bot
+# pancakeswap arbitrage bot
 
 PancakeSwap has a price prediction game(https://pancakeswap.finance/prediction), and I notice that the payout of Bull and Bear often differ a lot. Apart from that, the chainlink price feed is slower than the Cex price update since the former feeds the price every 21 seconds while people trade BNB on Cex non-stop. Therefore, there might be a small arbitrage opportunity. This bot bets and claims rewards automatically. 
 
