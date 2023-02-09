@@ -1,6 +1,7 @@
 import ccxt
 import time
 import csv
+import os
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 from keys import account, private_key, APIprovider, address, chainlink_address, abi, chainlink_abi
@@ -18,7 +19,8 @@ contract = w3.eth.contract(address=address, abi=abi)
 # initialize data writer
 with open('history.csv', 'a') as file:
     writer = csv.writer(file)
-    writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
+    if os.path.getsize('keys.py') == 0: 
+        writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
 
 
 # make sure there is price advantage or at least no price disadvantage
@@ -112,14 +114,14 @@ class OnChain:
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= 0.1 and OffChain() == -1:
+        if EV_bear >= self.EV and OffChain() == -1:
             data = self.betBear()
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
                 w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
 
-        elif EV_bull >= 0.1 and OffChain() == 1:
+        elif EV_bull >= self.EV and OffChain() == 1:
             data = self.betBull()
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
