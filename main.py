@@ -45,7 +45,7 @@ class OnChain:
         self.current_epoch = contract.functions.currentEpoch().call()
         self.current_timestamp = w3.eth.get_block('latest')['timestamp']
         self.current_round_info = contract.functions.rounds(self.current_epoch).call()
-        self.betAmount = 0.1
+        self.betAmount = 0.01
 
     # function to bet bull
     def betBull(self):
@@ -105,14 +105,14 @@ class OnChain:
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= 0.25 and OffChain() == -1:
+        if EV_bear >= 0.1 and OffChain() == -1:
             data = self.betBear()
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
                 w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
 
-        elif EV_bull >= 0.25 and OffChain() == 1:
+        elif EV_bull >= 0.1 and OffChain() == 1:
             data = self.betBull()
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
@@ -123,7 +123,7 @@ class OnChain:
             print(self.current_epoch, 'no bet')
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
-                w.writerow([self.current_epoch, 'NoBet', self.betAmount, balance])
+                w.writerow([self.current_epoch, 'No Bet', self.betAmount, balance])
 
 
 # run the strategy
@@ -145,5 +145,6 @@ while True:
     except Exception as e:
         print(e)
         continue
+
     else:
         continue
