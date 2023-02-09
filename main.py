@@ -23,7 +23,7 @@ with open('history.csv', 'a') as file:
         writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
 
 
-# make sure there is price advantage or at least no major price disadvantage
+# make sure there is price advantage or at least no price disadvantage
 def OffChain():
     # get mean price of the BNB price from on and off chain
     cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
@@ -34,7 +34,7 @@ def OffChain():
     price_diff = cex_price - onchain_price
     if price_diff > 0.05:
         return 1
-    elif price_diff < -0.05:
+    elif price_diff < -0.5:
         return -1
     else:
         return 0
@@ -85,8 +85,9 @@ class OnChain:
 
     # Check if there is reward to claim in the last 3 rounds, and claim if is
     def claim(self):
+        self.nonce = w3.eth.get_transaction_count(account)
         claimable = []
-        for i in range(3):
+        for i in range(5):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
@@ -95,7 +96,7 @@ class OnChain:
                 'chainId': 56,
                 'from': account,
                 'gas': 500000,
-                'gasPrice': w3.toWei(5, 'gwei'),
+                'gasPrice': w3.toWei(15, 'gwei'),
                 'nonce': self.nonce,
             })
             signed_tx = w3.eth.account.sign_transaction(transaction, private_key)
