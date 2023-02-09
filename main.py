@@ -85,13 +85,13 @@ class OnChain:
 
     # Check if there is reward to claim in the last 3 rounds, and claim if is
     def claim(self):
-        self.nonce = w3.eth.get_transaction_count(account)
         claimable = []
         for i in range(5):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
         if claimable:
+            self.nonce = w3.eth.get_transaction_count(account)
             transaction = contract.functions.claim(claimable).buildTransaction({
                 'chainId': 56,
                 'from': account,
