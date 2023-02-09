@@ -32,9 +32,9 @@ def OffChain():
     onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
 
     price_diff = cex_price - onchain_price
-    if price_diff > 0.1:
+    if price_diff > 0:
         return 1
-    elif price_diff < -0.1:
+    elif price_diff < 0:
         return -1
     else:
         return 0
