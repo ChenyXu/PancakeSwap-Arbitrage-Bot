@@ -22,28 +22,28 @@ with open('history.csv', 'a') as file:
 
 
 # make sure there is price advantage or at least no price disadvantage
-class OffChain:
+def OffChain():
     # get mean price of the BNB price from on and off chain
-    def __init__(self):
-        self.cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
-                          binance.fetch_order_book('BNB/BUSD')['asks'][0][
-                              0]) / 2
-        self.onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
+    cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
+                 binance.fetch_order_book('BNB/BUSD')['asks'][0][
+                     0]) / 2
+    onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
 
-    def cal(self):
-        price_diff = self.cex_price - self.onchain_price
-        if price_diff > 0.1:
-            return 1
-        elif price_diff < -0.1:
-            return -1
-        else:
-            return 0
+    price_diff = cex_price - onchain_price
+    if price_diff > 0.1:
+        return 1
+    elif price_diff < -0.1:
+        return -1
+    else:
+        return 0
 
 
 class OnChain:
-    def __int__(self):
+
+    def __init__(self):
         self.nonce = w3.eth.get_transaction_count(account)
         self.current_epoch = contract.functions.currentEpoch().call()
+        self.current_timestamp = w3.eth.get_block('latest')['timestamp']
         self.current_round_info = contract.functions.rounds(self.current_epoch).call()
         self.betAmount = 0.1
 
@@ -105,15 +105,15 @@ class OnChain:
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= 0.25 and OffChain.cal() == -1:
-            data = self.betBear(self.betAmount)
+        if EV_bear >= 0.25 and OffChain() == -1:
+            data = self.betBear()
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
-                w = csv.writer(file)
+                w = csv.writer(f)
                 w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
 
-        elif EV_bull >= 0.25 and OffChain().cal == 1:
-            data = self.betBull(self.betAmount)
+        elif EV_bull >= 0.25 and OffChain() == 1:
+            data = self.betBull()
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
@@ -129,21 +129,21 @@ class OnChain:
 # run the strategy
 while True:
     try:
+        onchain = OnChain()
         # get data from chainlink in order to bet 10s before the close of this round
-        current_round_info = OnChain.current_round_info
+        current_round_info = onchain.current_round_info
         current_lock = current_round_info[2]
-        current_timestamp = w3.eth.get_block('latest')['timestamp']
+        current_timestamp = onchain.current_timestamp
         time_to_lock = current_lock - current_timestamp
 
         # check time before close of this round
         if 12 > time_to_lock > 3:
-            OnChain.bet()
-            OnChain.claim()
+            onchain.bet()
+            onchain.claim()
             time.sleep(250)
 
     except Exception as e:
         print(e)
         continue
-
     else:
         continue
