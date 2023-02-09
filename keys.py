@@ -1,10 +1,10 @@
 import json
 
-APIprovider = ''
+APIprovider = 'https://bsc-dataseed.binance.org/'
 account = ''
 private_key = ''
 address = '0x18B2A687610328590Bc8F2e5fEdDe3b582A49cdA'
-chainlink_address = '0xD276fCF34D54A926773c399eBAa772C12ec394aC'
+chainlink_address = '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE'
 chainlink_abi = json.loads(
     '[{"inputs":[{"internalType":"address","name":"_aggregator","type":"address"},{"internalType":"address",'
     '"name":"_accessController","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},'
