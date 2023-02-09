@@ -19,7 +19,7 @@ contract = w3.eth.contract(address=address, abi=abi)
 # initialize data writer
 with open('history.csv', 'a') as file:
     writer = csv.writer(file)
-    if os.path.getsize('keys.py') == 0: 
+    if os.path.getsize('keys.py') == 0:
         writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
 
 
@@ -32,9 +32,9 @@ def OffChain():
     onchain_price = chainlink_contract.functions.latestRoundData().call()[1] / 100000000
 
     price_diff = cex_price - onchain_price
-    if price_diff > 0:
+    if price_diff > 0.01:
         return 1
-    elif price_diff < 0:
+    elif price_diff < -0.01:
         return -1
     else:
         return 0
@@ -91,7 +91,6 @@ class OnChain:
                 claimable.append(self.current_epoch - i)
 
         if claimable:
-            print(claimable)
             transaction = contract.functions.claim(claimable).buildTransaction({
                 'chainId': 56,
                 'from': account,
@@ -114,14 +113,14 @@ class OnChain:
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= self.EV and OffChain() == -1:
+        if EV_bear >= self.EV and OffChain() <= 0:
             data = self.betBear()
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
                 w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
 
-        elif EV_bull >= self.EV and OffChain() == 1:
+        elif EV_bull >= self.EV and OffChain() >= 0:
             data = self.betBull()
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
@@ -136,24 +135,29 @@ class OnChain:
 
 
 # run the strategy
-while True:
-    try:
-        onchain = OnChain()
-        # get data from chainlink in order to bet 10s before the close of this round
-        current_round_info = onchain.current_round_info
-        current_lock = current_round_info[2]
-        current_timestamp = onchain.current_timestamp
-        time_to_lock = current_lock - current_timestamp
+def main():
+    while True:
+        try:
+            onchain = OnChain()
+            # get data from chainlink in order to bet 10s before the close of this round
+            current_round_info = onchain.current_round_info
+            current_lock = current_round_info[2]
+            current_timestamp = onchain.current_timestamp
+            time_to_lock = current_lock - current_timestamp
 
-        # check time before close of this round
-        if 12 > time_to_lock > 3:
-            onchain.bet()
-            onchain.claim()
-            time.sleep(250)
+            # check time before close of this round
+            if 12 > time_to_lock > 3:
+                onchain.bet()
+                onchain.claim()
+                time.sleep(250)
 
-    except Exception as e:
-        print(e)
-        continue
+        except Exception as e:
+            print(e)
+            continue
 
-    else:
-        continue
+        else:
+            continue
+
+
+if __name__ == "__main__":
+    main()
