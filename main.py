@@ -120,9 +120,9 @@ class OnChain:
             # refresh data to get the post-bet correct EV,and bet result
             time.sleep(25)
             bet_round_info = contract.functions.rounds(self.current_epoch).call()
-            ev_bear = bet_round_info[8] / bet_round_info[10] / 2 - 1.03
+            ev_bear_ex_post = bet_round_info[8] / bet_round_info[10] / 2 - 1.03
             # save info to the csv file
-            write([self.current_epoch, 'Bear', self.betAmount, ev_bear, self.balance - self.betAmount])
+            write([self.current_epoch, 'Bear', self.betAmount, ev_bear,ev_bear_ex_post, self.balance - self.betAmount])
 
         elif ev_bull >= self.EV and temp >= 0:
             data = self.bet_bull()
@@ -130,9 +130,9 @@ class OnChain:
             # refresh data to get the post-bet correct EV, and bet result
             time.sleep(25)
             bet_round_info = contract.functions.rounds(self.current_epoch).call()
-            ev_bull = bet_round_info[8] / bet_round_info[9] / 2 - 1.03
+            ev_bull_ex_post = bet_round_info[8] / bet_round_info[9] / 2 - 1.03
             # save info to the csv file
-            write([self.current_epoch, 'Bull', self.betAmount, ev_bull, self.balance - self.betAmount])
+            write([self.current_epoch, 'Bull', self.betAmount, ev_bull, ev_bull_ex_post, self.balance - self.betAmount])
 
         else:
             print(self.current_epoch, 'no bet')
@@ -146,7 +146,7 @@ def main():
     if not os.path.exists('history.csv'):
         with open('history.csv', 'a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['Epoch', 'Direction', 'Amount', 'EV', 'Balance'])
+            writer.writerow(['Epoch', 'Direction', 'Amount', 'EV ex ante', 'EV ex post', 'Balance'])
             file.flush()
         file.close()
     else:
