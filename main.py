@@ -21,6 +21,7 @@ with open('history.csv', 'a') as file:
     writer = csv.writer(file)
     if os.path.getsize('keys.py') == 0:
         writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
+    file.close()
 
 
 # make sure there is price advantage or at least no price disadvantage
@@ -47,8 +48,8 @@ class OnChain:
         # set betting parameters. betAmount is the amount you want to bet every round.
         # EV is the threshold to make a bet. A higher EV means that you only make bets with higher expected gain.
         # Since data query through RPC is slow and unstable, a higher EV give a better buffer against loss.
-        self.betAmount = 0.01
-        self.EV = 0.1
+        self.betAmount = 0.1
+        self.EV = 0.2
         # get onchain data
         self.nonce = w3.eth.get_transaction_count(account)
         self.current_epoch = contract.functions.currentEpoch().call()
@@ -85,13 +86,13 @@ class OnChain:
 
     # Check if there is reward to claim in the last 3 rounds, and claim if is
     def claim(self):
+        self.nonce = w3.eth.get_transaction_count(account)
         claimable = []
-        for i in range(5):
+        for i in range(100):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
         if claimable:
-            self.nonce = w3.eth.get_transaction_count(account)
             transaction = contract.functions.claim(claimable).buildTransaction({
                 'chainId': 56,
                 'from': account,
@@ -108,31 +109,35 @@ class OnChain:
         current_total = self.current_round_info[8]
         current_bull = self.current_round_info[9]
         current_bear = self.current_round_info[10]
+        temp = OffChain()
 
         # calculate the payouts
         EV_bull = current_total / current_bull / 2 - 1.03
         EV_bear = current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= self.EV and OffChain() <= 0:
+        if EV_bear >= self.EV and temp <= 0:
             data = self.betBear()
             print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
-                w.writerow([self.current_epoch, 'Bear', self.betAmount, balance])
+                w.writerow([self.current_epoch, 'Bear', self.betAmount, w3.eth.get_balance(account)])
+                f.close()
 
-        elif EV_bull >= self.EV and OffChain() >= 0:
+        elif EV_bull >= self.EV and temp >= 0:
             data = self.betBull()
             print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
-                w.writerow([self.current_epoch, 'Bull', self.betAmount, balance])
+                w.writerow([self.current_epoch, 'Bull', self.betAmount, w3.eth.get_balance(account)])
+                f.close()
 
         else:
             print(self.current_epoch, 'no bet')
             with open('history.csv', 'a') as f:
                 w = csv.writer(f)
-                w.writerow([self.current_epoch, 'No Bet', self.betAmount, balance])
+                w.writerow([self.current_epoch, 'No Bet', self.betAmount, w3.eth.get_balance(account)])
+                f.close()
 
 
 # run the strategy
@@ -149,8 +154,10 @@ def main():
             # check time before close of this round
             if 12 > time_to_lock > 3:
                 onchain.bet()
-                onchain.claim()
                 time.sleep(250)
+
+            if w3.eth.get_balance(account) < onchain.betAmount * 5:
+                onchain.claim()
 
         except Exception as e:
             print(e)
