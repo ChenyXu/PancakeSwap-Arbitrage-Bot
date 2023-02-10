@@ -35,7 +35,7 @@ def off_chain():
     price_diff = cex_price - onchain_price
     if price_diff > 0.05:
         return 1
-    elif price_diff < -0.5:
+    elif price_diff < -0.05:
         return -1
     else:
         return 0
