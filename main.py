@@ -1,7 +1,7 @@
+import os
 import ccxt
 import time
 import csv
-import os
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 from keys import account, private_key, APIprovider, address, chainlink_address, abi, chainlink_abi
@@ -10,22 +10,22 @@ from keys import account, private_key, APIprovider, address, chainlink_address, 
 binance = ccxt.binance()
 w3 = Web3(Web3.HTTPProvider(APIprovider))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-balance = w3.eth.get_balance(account)
 
 # initialize chainlink contract and pancake prediction contract
 chainlink_contract = w3.eth.contract(address=chainlink_address, abi=chainlink_abi)
 contract = w3.eth.contract(address=address, abi=abi)
 
-# initialize data writer
-with open('history.csv', 'a') as file:
-    writer = csv.writer(file)
-    if os.path.getsize('keys.py') == 0:
-        writer.writerow(['Epoch', 'Direction', 'Amount', 'Balance'])
-    file.close()
+
+# write data to CSV file
+def write(content):
+    with open('history.csv', 'a', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(content)
+        f.flush()
 
 
 # make sure there is price advantage or at least no price disadvantage
-def OffChain():
+def off_chain():
     # get mean price of the BNB price from on and off chain
     cex_price = (binance.fetch_order_book('BNB/BUSD')['bids'][0][0] +
                  binance.fetch_order_book('BNB/BUSD')['asks'][0][
@@ -48,16 +48,17 @@ class OnChain:
         # set betting parameters. betAmount is the amount you want to bet every round.
         # EV is the threshold to make a bet. A higher EV means that you only make bets with higher expected gain.
         # Since data query through RPC is slow and unstable, a higher EV give a better buffer against loss.
-        self.betAmount = 0.1
-        self.EV = 0.2
+        self.betAmount = 0.2
+        self.EV = 0.25
         # get onchain data
         self.nonce = w3.eth.get_transaction_count(account)
         self.current_epoch = contract.functions.currentEpoch().call()
         self.current_timestamp = w3.eth.get_block('latest')['timestamp']
         self.current_round_info = contract.functions.rounds(self.current_epoch).call()
+        self.balance = w3.eth.get_balance(account) / 10 ** 18
 
     # function to bet bull
-    def betBull(self):
+    def bet_bull(self):
         transaction = contract.functions.betBull(self.current_epoch).buildTransaction({
             'chainId': 56,
             'from': account,
@@ -71,7 +72,7 @@ class OnChain:
         return data
 
     # function to bet bear
-    def betBear(self):
+    def bet_bear(self):
         transaction = contract.functions.betBear(self.current_epoch).buildTransaction({
             'chainId': 56,
             'from': account,
@@ -84,21 +85,20 @@ class OnChain:
         data = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
         return data
 
-    # Check if there is reward to claim in the last 3 rounds, and claim if is
+    # Check if there is over 3 unclaimed rewards in the previous 15 rounds
     def claim(self):
-        self.nonce = w3.eth.get_transaction_count(account)
         claimable = []
-        for i in range(100):
+        for i in range(15):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
-        if claimable:
+        if len(claimable) >= 3:
             transaction = contract.functions.claim(claimable).buildTransaction({
                 'chainId': 56,
                 'from': account,
                 'gas': 500000,
                 'gasPrice': w3.toWei(15, 'gwei'),
-                'nonce': self.nonce,
+                'nonce': self.nonce + 1,
             })
             signed_tx = w3.eth.account.sign_transaction(transaction, private_key)
             result = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -106,64 +106,67 @@ class OnChain:
 
     # Check if there is an arb opportunity and bet accordingly
     def bet(self):
-        current_total = self.current_round_info[8]
-        current_bull = self.current_round_info[9]
-        current_bear = self.current_round_info[10]
-        temp = OffChain()
-
-        # calculate the payouts
-        EV_bull = current_total / current_bull / 2 - 1.03
-        EV_bear = current_total / current_bear / 2 - 1.03
+        # get info needed for the calculation of payout ratio
+        current_total, current_bull, current_bear = self.current_round_info[8], self.current_round_info[9], \
+            self.current_round_info[10]
+        temp = off_chain()
+        # calculate the payout ratio
+        ev_bull, ev_bear = current_total / current_bull / 2 - 1.03, current_total / current_bear / 2 - 1.03
 
         # bet accordingly and write data
-        if EV_bear >= self.EV and temp <= 0:
-            data = self.betBear()
-            print('EV', EV_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
-            with open('history.csv', 'a') as f:
-                w = csv.writer(f)
-                w.writerow([self.current_epoch, 'Bear', self.betAmount, w3.eth.get_balance(account)])
-                f.close()
+        if ev_bear >= self.EV and temp <= 0:
+            data = self.bet_bear()
+            print('EV', ev_bear, self.current_epoch, 'bet bear for', self.betAmount, 'bnb', data)
+            # refresh data to get the post-bet correct EV,and bet result
+            time.sleep(25)
+            bet_round_info = contract.functions.rounds(self.current_epoch).call()
+            ev_bear = bet_round_info[8] / bet_round_info[10] / 2 - 1.03
+            # save info to the csv file
+            write([self.current_epoch, 'Bear', self.betAmount, ev_bear, self.balance - self.betAmount])
 
-        elif EV_bull >= self.EV and temp >= 0:
-            data = self.betBull()
-            print('EV', EV_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
-            with open('history.csv', 'a') as f:
-                w = csv.writer(f)
-                w.writerow([self.current_epoch, 'Bull', self.betAmount, w3.eth.get_balance(account)])
-                f.close()
+        elif ev_bull >= self.EV and temp >= 0:
+            data = self.bet_bull()
+            print('EV', ev_bull, self.current_epoch, 'bet bull for', self.betAmount, 'bnb', data)
+            # refresh data to get the post-bet correct EV, and bet result
+            time.sleep(25)
+            bet_round_info = contract.functions.rounds(self.current_epoch).call()
+            ev_bull = bet_round_info[8] / bet_round_info[9] / 2 - 1.03
+            # save info to the csv file
+            write([self.current_epoch, 'Bull', self.betAmount, ev_bull, self.balance - self.betAmount])
 
         else:
             print(self.current_epoch, 'no bet')
-            with open('history.csv', 'a') as f:
-                w = csv.writer(f)
-                w.writerow([self.current_epoch, 'No Bet', self.betAmount, w3.eth.get_balance(account)])
-                f.close()
+            # save info to the csv file
+            write([self.current_epoch, 'No Bet', 0, float("NAN"), self.balance])
+            time.sleep(25)
 
 
-# run the strategy
 def main():
+    # initialize data writer
+    if not os.path.exists('history.csv'):
+        with open('history.csv', 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Epoch', 'Direction', 'Amount', 'EV', 'Balance'])
+            file.flush()
+        file.close()
+    else:
+        print("History file Exists")
+
+    # run the strategy
     while True:
         try:
+            # get time
             onchain = OnChain()
-            # get data from chainlink in order to bet 10s before the close of this round
-            current_round_info = onchain.current_round_info
-            current_lock = current_round_info[2]
-            current_timestamp = onchain.current_timestamp
-            time_to_lock = current_lock - current_timestamp
+            time_to_lock = onchain.current_round_info[2] - onchain.current_timestamp
 
-            # check time before close of this round
+            # if the close of betting is near, bet(parameters modifiable)
             if 12 > time_to_lock > 3:
                 onchain.bet()
-                time.sleep(250)
-
-            if w3.eth.get_balance(account) < onchain.betAmount * 5:
                 onchain.claim()
+                time.sleep(250)
 
         except Exception as e:
             print(e)
-            continue
-
-        else:
             continue
 
 
