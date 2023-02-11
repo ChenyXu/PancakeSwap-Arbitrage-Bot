@@ -88,7 +88,7 @@ class OnChain:
     # Check if there is over 3 unclaimed rewards in the previous 15 rounds
     def claim(self):
         claimable = []
-        for i in range(15):
+        for i in range(100):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
@@ -160,7 +160,7 @@ def main():
             time_to_lock = onchain.current_round_info[2] - onchain.current_timestamp
 
             # if the close of betting is near, bet(parameters modifiable)
-            if 12 > time_to_lock > 3:
+            if 10 > time_to_lock > 3:
                 onchain.bet()
                 onchain.claim()
                 time.sleep(250)
