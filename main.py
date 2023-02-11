@@ -85,10 +85,10 @@ class OnChain:
         data = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
         return data
 
-    # Check if there is over 3 unclaimed rewards in the previous 15 rounds
+    # Check if there is over 3 unclaimed rewards in the previous 50 rounds
     def claim(self):
         claimable = []
-        for i in range(100):
+        for i in range(50):
             if contract.functions.claimable(self.current_epoch - i, account).call():
                 claimable.append(self.current_epoch - i)
 
