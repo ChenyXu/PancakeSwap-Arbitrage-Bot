@@ -1,7 +1,5 @@
 # pancakeswap arbitrage bot
 
-PancakeSwap has a price prediction game(https://pancakeswap.finance/prediction), and I notice that the payout of Bull and Bear often differ a lot. Therefore, there might be a small arbitrage opportunity. This bot bets and claims rewards automatically. 
+PancakeSwap has a price prediction game(https://pancakeswap.finance/prediction), and I notice that the payout of Bull and Bear often differs a lot. Therefore, there might be a small arbitrage opportunity. This bot bets and claims rewards automatically. Data shows that the mean return is positive, usually above 15%, based on the config. However, the return variance can be very high, and consecutive losses can drain your fund quickly.
 
-You need a BSC address, its private key, and an RPC link for this bot. If you have prepared these items, put them in the key.py file accordingly. If you don't have a RPC link, you might use a public RPC listed here https://docs.bscscan.com/misc-tools-and-utilities/public-rpc-nodes. 
-
-You need to download the liabaries(ccxt and web3) before running the main.py. You might want to set your preferred EV and betAmount paramters in the OnChain class.
+You need a BSC address, its private key, and an RPC link for this bot. If you have prepared these items, put them in the key.py file accordingly. If you don't have an RPC link, you might use a public RPC listed here https://docs.bscscan.com/misc-tools-and-utilities/public-rpc-nodes. You also need to download the library web3 before running main.py. You should set your preferred EV and bet amount parameters.
