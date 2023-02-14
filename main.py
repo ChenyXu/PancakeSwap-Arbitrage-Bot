@@ -160,7 +160,7 @@ def main():
             time_to_lock = onchain.current_round_info[2] - onchain.current_timestamp
 
             # if the close of betting is near, bet(parameters modifiable)
-            if 10 > time_to_lock > 3:
+            if 15 > time_to_lock > 3:
                 onchain.bet()
                 onchain.claim()
                 time.sleep(250)
