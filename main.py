@@ -145,7 +145,7 @@ def run(amount, ev):
             time_to_lock = onchain.current_round_info[2] - onchain.current_timestamp
 
             # if the close of betting is near, bet(parameters modifiable)
-            if 8 >= time_to_lock > 0:
+            if 10 >= time_to_lock > 0:
                 onchain.bet()
                 onchain.claim()
                 time.sleep(250)
