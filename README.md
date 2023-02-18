@@ -8,7 +8,7 @@ The distribution of EV ex-post (the EV that takes effect after betting instead o
 The predicted win rate for bets with abnormal returns, using a logit regression model, which is quite close to the historical win rate:
 ![Alt text](https://github.com/ChenyXu/PancakeSwap-Arbitrage-Bot/blob/main/Predicted%20winrate%20using%20regression.png)
 
-The initial assumption that compelled me to do this project is wrong, but why could people predict the price of BNB in 5 mins? Shouldn't it be impossible based on the random walk theory? This phenomenon requires more research.
+After the adjustment for the reduced win rate for high returns, the arbitrage strategy cannot produce extra return. The initial assumption that compelled me to do this project is wrong, but why could people predict the price of BNB in 5 mins? Shouldn't it be impossible based on the random walk theory? This phenomenon requires more research.
 
 You need a BSC address, its private key, and an RPC link for this bot. If you have prepared these items, put them in the key.py file accordingly. If you don't have an RPC link, you might use a public RPC listed here https://docs.bscscan.com/misc-tools-and-utilities/public-rpc-nodes. You also need to download the library web3 before running main.py. You should set your preferred EV and bet amount parameters.
 
