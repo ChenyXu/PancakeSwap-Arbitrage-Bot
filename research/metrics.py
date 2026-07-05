@@ -81,6 +81,7 @@ def base_rates(clean: pd.DataFrame) -> dict:
         "n_down": int(clean["down"].sum()),
         "n_tie": int(clean["tie"].sum()),
         "logret_sd": float(ret.std()),
+        "mean_abs_logret": float(ret.abs().mean()),
         "annualized_vol": float(ret.std() * np.sqrt(per_year)),
         "lag1_autocorr": ac1,
         "lag1_autocorr_t": ac1 * float(np.sqrt(mask.sum())),
