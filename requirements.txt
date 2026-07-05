@@ -1,0 +1,14 @@
+# Bot (on-chain)
+web3>=7,<8
+python-dotenv>=1.0
+
+# Research pipeline (reproduces all stats and figures)
+pandas>=2.0
+numpy>=1.26
+matplotlib>=3.8
+statsmodels>=0.14
+scipy>=1.11
+
+# Dev / CI
+pytest>=8.0
+ruff>=0.4

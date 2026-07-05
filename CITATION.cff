@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: >-
+  If you use the 144,000-round PancakeSwap Prediction dataset or the analysis
+  in your research, please cite it as below.
+title: >-
+  The Arbitrage That Wasn't: 144,000 Rounds of a Five-Minute Crypto Betting
+  Market
+authors:
+  - family-names: Xu
+    given-names: Chenning
+type: software
+repository-code: https://github.com/xcnecon/PancakeSwap-Arbitrage-Bot
+license: MIT
+version: 2.0.0
+date-released: "2026-07-05"
+keywords:
+  - prediction-markets
+  - market-efficiency
+  - favorite-longshot-bias
+  - parimutuel-betting
+  - bnb-chain
+  - on-chain-data
